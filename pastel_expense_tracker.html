@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Franck&sa Family</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: #FFF9FB;
+    }
+
+    .active-btn {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      transform: scale(1.05);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn-toggle {
+      transition: all 0.2s ease-in-out;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl text-pink-500 font-bold text-center mb-6">🐷 Franck&sa Family</h1>
+
+    <!-- Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-blue-100 p-4 rounded-xl text-center">
+        <div class="text-blue-600 text-xl font-bold">รายรับ</div>
+        <div id="totalIncome" class="text-2xl mt-2">฿0</div>
+      </div>
+      <div class="bg-red-100 p-4 rounded-xl text-center">
+        <div class="text-red-600 text-xl font-bold">รายจ่าย</div>
+        <div id="totalExpense" class="text-2xl mt-2">฿0</div>
+      </div>
+      <div class="bg-green-100 p-4 rounded-xl text-center">
+        <div class="text-green-600 text-xl font-bold">คงเหลือ</div>
+        <div id="balance" class="text-2xl mt-2">฿0</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="bg-white p-4 rounded-xl shadow mb-6">
+      <canvas id="monthChart" height="120"></canvas>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white p-4 rounded-xl shadow mb-6">
+      <div class="flex justify-center gap-4 mb-4">
+        <button id="incomeBtn" class="btn-toggle px-4 py-2 bg-blue-300 text-white rounded-full active-btn">รายรับ</button>
+        <button id="expenseBtn" class="btn-toggle px-4 py-2 bg-red-300 text-white rounded-full">รายจ่าย</button>
+      </div>
+      <input type="text" id="description" placeholder="ชื่อรายการ เช่น ข้าวหมูทอด" class="w-full mb-3 p-2 border rounded" />
+      <input type="number" id="amount" placeholder="จำนวนเงิน" class="w-full mb-3 p-2 border rounded" />
+      <select id="category" class="w-full mb-3 p-2 border rounded">
+        <option value="อาหาร">🍔 อาหาร</option>
+        <option value="เดินทาง">🚗 เดินทาง</option>
+        <option value="เงินเดือน">💼 เงินเดือน</option>
+        <option value="บันเทิง">🎉 บันเทิง</option>
+        <option value="อื่นๆ">✏️ อื่นๆ</option>
+      </select>
+      <input type="date" id="date" class="w-full mb-3 p-2 border rounded" />
+      <button onclick="submitData()" class="w-full bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full">🐣 บันทึกรายการ</button>
+    </div>
+
+    <!-- รายการย้อนหลัง -->
+    <div class="bg-white p-4 rounded-xl shadow">
+      <h2 class="text-lg font-bold text-pink-600 mb-2">📅 รายการย้อนหลัง</h2>
+      <div id="recordList" class="text-sm space-y-4"></div>
+    </div>
+  </div>
+
+  <script>
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxJgTC8gIwvtG4Y2bROxO2XrT-35WL-PFit598NCMhgaK_TAEff3KM0d_VJIg9R11IK/exec";
+
+    const incomeBtn = document.getElementById("incomeBtn");
+    const expenseBtn = document.getElementById("expenseBtn");
+    let currentType = "income";
+
+    incomeBtn.addEventListener("click", () => {
+      currentType = "income";
+      incomeBtn.classList.add("active-btn");
+      expenseBtn.classList.remove("active-btn");
+    });
+
+    expenseBtn.addEventListener("click", () => {
+      currentType = "expense";
+      expenseBtn.classList.add("active-btn");
+      incomeBtn.classList.remove("active-btn");
+    });
+
+    // ห้ามพิมพ์เครื่องหมายลบ
+    document.getElementById("amount").addEventListener("input", function () {
+      this.value = this.value.replace(/-/g, "");
+    });
+
+    async function submitData() {
+      const description = document.getElementById("description").value.trim();
+      let amount = document.getElementById("amount").value.trim();
+      const date = document.getElementById("date").value;
+      const category = document.getElementById("category").value;
+
+      if (!description || !amount || !date) {
+        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        return;
+      }
+
+      amount = amount.replace(/-/g, "");
+      const finalAmount = currentType === "income" ? parseFloat(amount) : -parseFloat(amount);
+
+      const payload = {
+        description: `[${category}] ${description}`,
+        amount: finalAmount,
+        date: date
+      };
+
+      await fetch(scriptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(payload).toString()
+      });
+
+      alert("บันทึกรายการเรียบร้อยแล้ว!");
+      location.reload();
+    }
+
+    async function fetchData() {
+      const res = await fetch(scriptUrl);
+      const data = await res.json();
+
+      let totalIncome = 0, totalExpense = 0;
+      const list = document.getElementById("recordList");
+      list.innerHTML = "";
+
+      // จัดกลุ่มตามวันที่
+      const grouped = {};
+      data.forEach(row => {
+        const date = row.date;
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(row);
+
+        if (row.amount >= 0) totalIncome += row.amount;
+        else totalExpense += row.amount;
+      });
+
+      // สร้างรายการแยกตามวัน
+      Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+        const daySection = document.createElement("div");
+        daySection.innerHTML = `<div class="font-bold text-pink-500">${date}</div>`;
+        grouped[date].forEach(row => {
+          const div = document.createElement("div");
+          div.innerHTML = `• ${row.description} <span class="${row.amount >= 0 ? 'text-blue-600' : 'text-red-500'}">${row.amount >= 0 ? '+' : ''}${row.amount}</span> บาท`;
+          daySection.appendChild(div);
+        });
+        list.appendChild(daySection);
+      });
+
+      document.getElementById("totalIncome").textContent = `฿${totalIncome}`;
+      document.getElementById("totalExpense").textContent = `฿${Math.abs(totalExpense)}`;
+      document.getElementById("balance").textContent = `฿${totalIncome + totalExpense}`;
+
+      const ctx = document.getElementById("monthChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["รายรับ", "รายจ่าย"],
+          datasets: [{
+            label: "ยอดรวม",
+            data: [totalIncome, Math.abs(totalExpense)],
+            backgroundColor: ["#A0E7E5", "#FFB5B5"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchData);
+  </script>
+</body>
+</html>
