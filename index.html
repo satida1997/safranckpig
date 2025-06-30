@@ -40,6 +40,11 @@
       </div>
     </div>
 
+    <!-- กราฟแท่ง -->
+    <div class="bg-white p-4 rounded-xl shadow mb-6">
+      <canvas id="incomeExpenseChart" height="150"></canvas>
+    </div>
+
     <div class="bg-white p-4 rounded-xl shadow mb-6">
       <div class="flex justify-center gap-4 mb-4">
         <button id="incomeBtn" class="btn-toggle px-4 py-2 bg-blue-300 text-white rounded-full active-btn">รายรับ</button>
@@ -71,6 +76,7 @@
     const submitBtn = document.getElementById("submitBtn");
     let currentType = "income";
     let editIndex = null;
+    let incomeExpenseChart = null;
 
     incomeBtn.onclick = () => {
       currentType = "income";
@@ -87,7 +93,6 @@
       this.value = this.value.replace(/-/g, "");
     });
 
-    // แปลงวันที่ใน timezone ไทย (UTC+7)
     function toThaiDate(dateStr) {
       const d = new Date(dateStr);
       d.setHours(d.getHours() + 7);
@@ -137,8 +142,37 @@
       location.reload();
     }
 
+    function renderChart(totalIncome, totalExpense) {
+      const ctx = document.getElementById("incomeExpenseChart").getContext("2d");
+      if (incomeExpenseChart) {
+        incomeExpenseChart.destroy();
+      }
+      incomeExpenseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['รายรับ', 'รายจ่าย'],
+          datasets: [{
+            label: 'ยอดรวม (บาท)',
+            data: [totalIncome, Math.abs(totalExpense)],
+            backgroundColor: ['#3B82F6', '#EF4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+
     async function fetchData() {
-      // เพิ่ม timestamp เพื่อบังคับไม่ให้ใช้ cache
       const res = await fetch(scriptUrl + '?t=' + new Date().getTime());
       const data = await res.json();
 
@@ -172,6 +206,8 @@
       document.getElementById("totalIncome").textContent = `฿${totalIncome}`;
       document.getElementById("totalExpense").textContent = `฿${Math.abs(totalExpense)}`;
       document.getElementById("balance").textContent = `฿${totalIncome + totalExpense}`;
+
+      renderChart(totalIncome, totalExpense);
     }
 
     function editRecord(index) {
