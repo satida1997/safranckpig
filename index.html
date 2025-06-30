@@ -88,6 +88,8 @@
     });
 
     async function submitData() {
+      if (submitBtn.disabled) return;
+
       const description = document.getElementById("description").value.trim();
       let amount = document.getElementById("amount").value.trim();
       const date = document.getElementById("date").value;
@@ -150,23 +152,6 @@
       document.getElementById("totalIncome").textContent = `฿${totalIncome}`;
       document.getElementById("totalExpense").textContent = `฿${Math.abs(totalExpense)}`;
       document.getElementById("balance").textContent = `฿${totalIncome + totalExpense}`;
-
-      const ctx = document.getElementById("monthChart").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: ["รายรับ", "รายจ่าย"],
-          datasets: [{
-            label: "ยอดรวม",
-            data: [totalIncome, Math.abs(totalExpense)],
-            backgroundColor: ["#A0E7E5", "#FFB5B5"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } }
-        }
-      });
     }
 
     function editRecord(index) {
