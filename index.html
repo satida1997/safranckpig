@@ -87,6 +87,16 @@
       this.value = this.value.replace(/-/g, "");
     });
 
+    // แปลงวันที่ใน timezone ไทย (UTC+7)
+    function toThaiDate(dateStr) {
+      const d = new Date(dateStr);
+      d.setHours(d.getHours() + 7);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
     async function submitData() {
       if (submitBtn.disabled) return;
 
@@ -128,7 +138,8 @@
     }
 
     async function fetchData() {
-      const res = await fetch(scriptUrl);
+      // เพิ่ม timestamp เพื่อบังคับไม่ให้ใช้ cache
+      const res = await fetch(scriptUrl + '?t=' + new Date().getTime());
       const data = await res.json();
 
       let totalIncome = 0, totalExpense = 0;
@@ -137,7 +148,7 @@
 
       const grouped = {};
       data.forEach((row, i) => {
-        const dateOnly = row.date.split("T")[0];
+        const dateOnly = toThaiDate(row.date);
         if (!grouped[dateOnly]) grouped[dateOnly] = [];
         grouped[dateOnly].push({ ...row, index: i });
 
@@ -164,13 +175,13 @@
     }
 
     function editRecord(index) {
-      fetch(scriptUrl)
+      fetch(scriptUrl + '?t=' + new Date().getTime())
         .then(res => res.json())
         .then(data => {
           const row = data[index];
           document.getElementById("description").value = row.description.replace(/\[.*?\]\s?/, "");
           document.getElementById("amount").value = Math.abs(row.amount);
-          document.getElementById("date").value = row.date.split("T")[0];
+          document.getElementById("date").value = toThaiDate(row.date);
           editIndex = index;
           currentType = row.amount >= 0 ? "income" : "expense";
           if (currentType === "income") {
