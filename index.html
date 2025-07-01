@@ -1,238 +1,459 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Franck&sa Family</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Kanit', sans-serif;
-      background-color: #FFF9FB;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Franck&sa Family</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: #F8F0E3; /* Light cream/cookie dough background */
+    }
+    .active-btn {
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+      transform: translateY(-4px); /* More pronounced lift */
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+    }
+    .btn-toggle {
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+      cursor: pointer; /* Indicate clickable */
+    }
+    /* Custom scrollbar for record list */
+    #recordList {
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    #recordList::-webkit-scrollbar {
+      width: 8px;
+    }
+    #recordList::-webkit-scrollbar-track {
+      background: #EADBC8; /* Cookie-like track */
+      border-radius: 10px;
+    }
+    #recordList::-webkit-scrollbar-thumb {
+      background: #DAA06D; /* Brown cookie thumb */
+      border-radius: 10px;
+    }
+    #recordList::-webkit-scrollbar-thumb:hover {
+      background: #B07B4C; /* Darker brown on hover */
+    }
+    /* Smooth transition for input focus */
+    input:focus, select:focus {
+      transition: all 0.2s ease-in-out;
+    }
+    /* Alternating row colors for better readability */
+    .record-item-odd {
+      background-color: #FDF8F0; /* Very light cream */
     }
-    .active-btn {
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      transform: scale(1.05);
-      transition: all 0.2s ease-in-out;
+    .record-item-even {
+      background-color: #F8F0E3; /* Slightly darker cream (same as body background) */
     }
-    .btn-toggle {
-      transition: all 0.2s ease-in-out;
-    }
-  </style>
+  </style>
 </head>
-<body class="p-4">
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-2xl text-pink-500 font-bold text-center mb-6">🐷 Franck&sa Family</h1>
+<body>
+  <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-[#F0EAD6]">
+    <h1 class="text-4xl text-[#D2691E] font-extrabold text-center mb-8 tracking-wide">
+      <span class="animate-pulse inline-block">🍪</span> Franck&sa Family <span class="animate-pulse inline-block">🍪</span>
+    </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div class="bg-blue-100 p-4 rounded-xl text-center">
-        <div class="text-blue-600 text-xl font-bold">รายรับ</div>
-        <div id="totalIncome" class="text-2xl mt-2">฿0</div>
-      </div>
-      <div class="bg-red-100 p-4 rounded-xl text-center">
-        <div class="text-red-600 text-xl font-bold">รายจ่าย</div>
-        <div id="totalExpense" class="text-2xl mt-2">฿0</div>
-      </div>
-      <div class="bg-green-100 p-4 rounded-xl text-center">
-        <div class="text-green-600 text-xl font-bold">คงเหลือ</div>
-        <div id="balance" class="text-2xl mt-2">฿0</div>
-      </div>
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-[#FFF8DC] p-5 rounded-xl text-center shadow-md border border-[#F0EAD6]">
+        <div class="text-[#D2691E] text-xl font-semibold">รายรับ</div>
+        <div id="totalIncome" class="text-3xl mt-2 font-bold text-[#8B4513]">฿0</div>
+      </div>
+      <div class="bg-[#FCE4EC] p-5 rounded-xl text-center shadow-md border border-[#F8D5E1]">
+        <div class="text-[#E91E63] text-xl font-semibold">รายจ่าย</div>
+        <div id="totalExpense" class="text-3xl mt-2 font-bold text-[#C2185B]">฿0</div>
+      </div>
+      <div class="bg-[#E8F5E9] p-5 rounded-xl text-center shadow-md border border-[#DDEEDD]">
+        <div class="text-[#4CAF50] text-xl font-semibold">คงเหลือ</div>
+        <div id="balance" class="text-3xl mt-2 font-bold text-[#2E7D32]">฿0</div>
+      </div>
+    </div>
 
-    <!-- กราฟแท่ง -->
-    <div class="bg-white p-4 rounded-xl shadow mb-6">
-      <canvas id="incomeExpenseChart" height="150"></canvas>
-    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border border-[#F0EAD6]">
+      <canvas id="incomeExpenseChart" height="150"></canvas>
+      <p class="text-center text-sm text-gray-500 mt-4">
+        หากกราฟไม่แสดงผล หรือข้อมูลไม่ถูกต้อง โปรดตรวจสอบว่า Google Apps Script ของคุณทำงานได้ปกติและ URL ถูกต้อง
+      </p>
+    </div>
 
-    <div class="bg-white p-4 rounded-xl shadow mb-6">
-      <div class="flex justify-center gap-4 mb-4">
-        <button id="incomeBtn" class="btn-toggle px-4 py-2 bg-blue-300 text-white rounded-full active-btn">รายรับ</button>
-        <button id="expenseBtn" class="btn-toggle px-4 py-2 bg-red-300 text-white rounded-full">รายจ่าย</button>
-      </div>
-      <input type="text" id="description" placeholder="ชื่อรายการ เช่น ข้าวหมูทอด" class="w-full mb-3 p-2 border rounded" />
-      <input type="number" id="amount" placeholder="จำนวนเงิน" class="w-full mb-3 p-2 border rounded" />
-      <select id="category" class="w-full mb-3 p-2 border rounded">
-        <option value="อาหาร">🍔 อาหาร</option>
-        <option value="เดินทาง">🚗 เดินทาง</option>
-        <option value="เงินเดือน">💼 เงินเดือน</option>
-        <option value="บันเทิง">🎉 บันเทิง</option>
-        <option value="อื่นๆ">✏️ อื่นๆ</option>
-      </select>
-      <input type="date" id="date" class="w-full mb-3 p-2 border rounded" />
-      <button id="submitBtn" onclick="submitData()" class="w-full bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full">🐣 บันทึกรายการ</button>
-    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg mb-8 border border-[#F0EAD6]">
+      <div class="flex justify-center gap-4 mb-5">
+        <button id="incomeBtn" class="btn-toggle px-8 py-3 bg-[#8B4513] text-white font-semibold rounded-full shadow-lg active-btn hover:bg-[#A0522D] focus:outline-none focus:ring-4 focus:ring-[#DAA06D]">รายรับ</button>
+        <button id="expenseBtn" class="btn-toggle px-8 py-3 bg-[#E91E63] text-white font-semibold rounded-full shadow-lg hover:bg-[#C2185B] focus:outline-none focus:ring-4 focus:ring-[#F8D5E1]">รายจ่าย</button>
+      </div>
+      <input type="text" id="description" placeholder="ชื่อรายการ เช่น ข้าวหมูทอด" class="w-full mb-4 p-3 border border-[#DAA06D] rounded-lg focus:ring-2 focus:ring-[#F0EAD6] focus:border-transparent text-gray-700 placeholder-gray-400" />
+      <input type="number" id="amount" placeholder="จำนวนเงิน" class="w-full mb-4 p-3 border border-[#DAA06D] rounded-lg focus:ring-2 focus:ring-[#F0EAD6] focus:border-transparent text-gray-700 placeholder-gray-400" />
+      <select id="category" class="w-full mb-4 p-3 border border-[#DAA06D] rounded-lg focus:ring-2 focus:ring-[#F0EAD6] focus:border-transparent bg-white text-gray-700">
+        <option value="อาหาร">🍔 อาหาร</option>
+        <option value="เดินทาง">🚗 เดินทาง</option>
+        <option value="เงินเดือน">💼 เงินเดือน</option>
+        <option value="บันเทิง">🎉 บันเทิง</option>
+        <option value="อื่นๆ">✏️ อื่นๆ</option>
+      </select>
+      <input type="date" id="date" class="w-full mb-5 p-3 border border-[#DAA06D] rounded-lg focus:ring-2 focus:ring-[#F0EAD6] focus:border-transparent text-gray-700" />
+      <button id="submitBtn" onclick="submitData()" class="w-full bg-gradient-to-r from-[#D2691E] to-[#CD5C5C] hover:from-[#CD5C5C] hover:to-[#D2691E] text-white font-bold py-3 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#F0EAD6] active:scale-100">
+        🍪 บันทึกรายการ
+      </button>
+    </div>
 
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h2 class="text-lg font-bold text-pink-600 mb-2">📅 รายการย้อนหลัง</h2>
-      <div id="recordList" class="text-sm space-y-4"></div>
-    </div>
-  </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg border border-[#F0EAD6]">
+      <h2 class="text-2xl font-bold text-[#D2691E] mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-[#DAA06D]" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd"/>
+        </svg>
+        รายการย้อนหลัง
+      </h1>
+      <div id="recordList" class="text-sm space-y-4"></div>
+    </div>
+  </div>
 
-  <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxJgTC8gIwvtG4Y2bROxO2XrT-35WL-PFit598NCMhgaK_TAEff3KM0d_VJIg9R11IK/exec";
-    const incomeBtn = document.getElementById("incomeBtn");
-    const expenseBtn = document.getElementById("expenseBtn");
-    const submitBtn = document.getElementById("submitBtn");
-    let currentType = "income";
-    let editIndex = null;
-    let incomeExpenseChart = null;
+  <script>
+    // **โปรดเปลี่ยน URL นี้ด้วย Web app URL ของ Google Apps Script ของคุณ**
+    // **สำคัญมาก: ตรวจสอบให้แน่ใจว่า URL นี้ถูกต้องและ Apps Script ของคุณถูก Deploy โดยมีสิทธิ์เข้าถึงเป็น 'Anyone'**
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwwVD5eLWteRbTSs8AakbntCb-2iQ5lGqR3BeM8O3VEKNQt3NnAqBHrRec4lSqr1X0mKA/exec"; 
 
-    incomeBtn.onclick = () => {
-      currentType = "income";
-      incomeBtn.classList.add("active-btn");
-      expenseBtn.classList.remove("active-btn");
-    };
-    expenseBtn.onclick = () => {
-      currentType = "expense";
-      expenseBtn.classList.add("active-btn");
-      incomeBtn.classList.remove("active-btn");
-    };
+    const incomeBtn = document.getElementById("incomeBtn");
+    const expenseBtn = document.getElementById("expenseBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    let currentType = "income";
+    
+    let incomeExpenseChart = null;
 
-    document.getElementById("amount").addEventListener("input", function () {
-      this.value = this.value.replace(/-/g, "");
+    // Event listeners for income/expense buttons
+    incomeBtn.addEventListener('click', () => {
+        currentType = 'income';
+        incomeBtn.classList.add('active-btn');
+        expenseBtn.classList.remove('active-btn');
+        document.getElementById("amount").value = Math.abs(document.getElementById("amount").value); // Ensure positive value
     });
 
-    function toThaiDate(dateStr) {
-      const d = new Date(dateStr);
-      d.setHours(d.getHours() + 7);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
-    }
+    expenseBtn.addEventListener('click', () => {
+        currentType = 'expense';
+        expenseBtn.classList.add('active-btn');
+        incomeBtn.classList.remove('active-btn');
+        document.getElementById("amount").value = Math.abs(document.getElementById("amount").value); // Ensure positive value
+    });
 
-    async function submitData() {
-      if (submitBtn.disabled) return;
+    async function fetchData() {
+      try {
+        const res = await fetch(scriptUrl + '?t=' + new Date().getTime()); 
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
 
-      const description = document.getElementById("description").value.trim();
-      let amount = document.getElementById("amount").value.trim();
-      const date = document.getElementById("date").value;
-      const category = document.getElementById("category").value;
+        let totalIncome = 0, totalExpense = 0;
+        const list = document.getElementById("recordList");
+        list.innerHTML = ""; 
 
-      if (!description || !amount || !date) {
-        alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-        return;
-      }
+        const grouped = {};
+        data.forEach((row) => { 
+          const dateOnly = toThaiDate(row.date); // ใช้ toThaiDate เพื่อจัดรูปแบบวันที่
+          if (!grouped[dateOnly]) grouped[dateOnly] = [];
+          grouped[dateOnly].push({ 
+            description: row.description, 
+            amount: row.amount, 
+            date: row.date,
+            timestamp: row.timestamp,
+            type: row.type // Ensure 'type' is read from fetched data (depends on Apps Script)
+          }); 
 
-      amount = amount.replace(/-/g, "");
-      const finalAmount = currentType === "income" ? parseFloat(amount) : -parseFloat(amount);
-      const payload = {
-        description: `[${category}] ${description}`,
-        amount: finalAmount,
-        date,
-        index: editIndex !== null ? editIndex : ""
-      };
+          // Calculate totals based on 'type' if available, otherwise use amount sign
+          if (row.type === 'income') {
+            totalIncome += Math.abs(row.amount);
+          } else if (row.type === 'expense') {
+            totalExpense -= Math.abs(row.amount); // Subtract for expense
+          } else { // Fallback for old data without 'type'
+            if (row.amount >= 0) totalIncome += row.amount;
+            else totalExpense += row.amount;
+          }
+        });
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "⏳ กำลังบันทึก...";
+        Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+          const section = document.createElement("div");
+          section.className = "mb-4 pb-2 border-b border-[#EADBC8] last:border-b-0"; 
+          section.innerHTML = `<div class="font-bold text-[#D2691E] text-lg mb-2">${date}</div>`; 
 
-      await fetch(scriptUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(payload).toString()
-      });
+          grouped[date].forEach((row, i) => { // Added index 'i' for alternating colors
+            const item = document.createElement("div");
+            // Apply alternating background colors and adjust padding/rounding
+            const rowClass = i % 2 === 0 ? 'record-item-even' : 'record-item-odd';
+            item.className = `flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 px-3 rounded-lg ${rowClass}`;
+            
+            // Determine class and sign based on 'type'
+            const isIncome = row.type === 'income'; // Strictly use 'type' for display
+            const amountClass = isIncome ? 'text-[#8B4513]' : 'text-[#E91E63]'; /* Cookie Run colors */
+            const amountSign = isIncome ? '+' : '-'; // Always show '-' for expense
 
-      location.reload();
-    }
+            item.innerHTML = `
+              <span class="text-gray-800 text-sm md:text-base font-medium mr-2 mb-1 sm:mb-0">• ${row.description}</span>
+              <div class="flex items-center flex-shrink-0 self-end sm:self-center">
+                <span class="${amountClass} font-semibold text-xs md:text-base mr-3">${amountSign}${Math.abs(row.amount).toLocaleString()} บาท</span>
+                <button onclick="window.deleteRecordByValue('${row.description.replace(/'/g, "\\'")}', ${row.amount}, '${row.date}', ${row.timestamp})" class="text-gray-500 hover:text-[#E91E63] transition duration-150 ease-in-out p-1 rounded-full hover:bg-[#FCE4EC} ml-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a2 2 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 11-2 0v6a1 1 0 112 0V8z" clip-rule="evenodd"/>
+                  </svg>
+                </button>
+              </div>
+            `;
+            section.appendChild(item);
+          });
+          list.appendChild(section);
+        });
 
-    async function deleteRecord(index) {
-      if (!confirm("ลบรายการนี้จริงหรือไม่?")) return;
-      await fetch(scriptUrl + `?action=delete&index=${index}`);
-      location.reload();
-    }
+        document.getElementById("totalIncome").textContent = `฿${totalIncome.toLocaleString()}`;
+        document.getElementById("totalExpense").textContent = `฿${Math.abs(totalExpense).toLocaleString()}`;
+        document.getElementById("balance").textContent = `฿${(totalIncome + totalExpense).toLocaleString()}`;
 
-    function renderChart(totalIncome, totalExpense) {
-      const ctx = document.getElementById("incomeExpenseChart").getContext("2d");
-      if (incomeExpenseChart) {
-        incomeExpenseChart.destroy();
-      }
-      incomeExpenseChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['รายรับ', 'รายจ่าย'],
-          datasets: [{
-            label: 'ยอดรวม (บาท)',
-            data: [totalIncome, Math.abs(totalExpense)],
-            backgroundColor: ['#3B82F6', '#EF4444']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    }
+        renderChart(totalIncome, totalExpense);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        Toastify({
+          text: "❌ ไม่สามารถโหลดข้อมูลได้! โปรดตรวจสอบการเชื่อมต่อและ URL ของ Apps Script",
+          duration: 5000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #FF4B2B, #FF416C)",
+          stopOnFocus: true, 
+        }).showToast();
+      }
+    }
 
-    async function fetchData() {
-      const res = await fetch(scriptUrl + '?t=' + new Date().getTime());
-      const data = await res.json();
+    function toThaiDate(dateStr) {
+      const d = new Date(dateStr);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${day}/${m}/${y}`; // เปลี่ยนเป็น DD/MM/YYYY
+    }
 
-      let totalIncome = 0, totalExpense = 0;
-      const list = document.getElementById("recordList");
-      list.innerHTML = "";
+    async function submitData() {
+      if (submitBtn.disabled) return;
 
-      const grouped = {};
-      data.forEach((row, i) => {
-        const dateOnly = toThaiDate(row.date);
-        if (!grouped[dateOnly]) grouped[dateOnly] = [];
-        grouped[dateOnly].push({ ...row, index: i });
+      const description = document.getElementById("description").value.trim();
+      let amount = document.getElementById("amount").value.trim();
+      const date = document.getElementById("date").value;
+      const category = document.getElementById("category").value;
 
-        if (row.amount >= 0) totalIncome += row.amount;
-        else totalExpense += row.amount;
-      });
+      if (!description || !amount || !date) {
+        Toastify({
+          text: "⚠️ กรุณากรอกข้อมูลให้ครบถ้วน!",
+          duration: 3000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #FF4B2B, #FF416C)",
+          stopOnFocus: true, 
+        }).showToast();
+        return;
+      }
 
-      Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
-        const section = document.createElement("div");
-        section.innerHTML = `<div class="font-bold text-pink-500">${date}</div>`;
-        grouped[date].forEach(row => {
-          const item = document.createElement("div");
-          item.innerHTML = `• ${row.description} <span class="${row.amount >= 0 ? 'text-blue-600' : 'text-red-500'}">${row.amount >= 0 ? '+' : ''}${row.amount}</span> บาท
-            <button onclick="editRecord(${row.index})" class="text-blue-500 underline ml-2">📝</button>
-            <button onclick="deleteRecord(${row.index})" class="text-red-500 underline ml-1">🗑️</button>`;
-          section.appendChild(item);
-        });
-        list.appendChild(section);
-      });
+      amount = amount.replace(/-/g, "");
+      // Always send amount as a positive number. The 'type' field will determine if it's income or expense.
+      const finalAmount = parseFloat(amount); 
+      // เพิ่มการตรวจสอบ NaN สำหรับ finalAmount ก่อนส่ง
+      if (isNaN(finalAmount)) {
+        Toastify({
+          text: "⚠️ จำนวนเงินไม่ถูกต้อง! กรุณาใส่ตัวเลข",
+          duration: 3000,
+          close: true,
+          gravity: "top",
+          position: "center",
+          backgroundColor: "linear-gradient(to right, #FF4B2B, #FF416C)",
+          stopOnFocus: true,
+        }).showToast();
+        return;
+      }
+      
+      let payload = {
+        action: "add", 
+        description: `[${category}] ${description}`,
+        amount: finalAmount, // Amount is now always positive
+        date: date,
+        timestamp: new Date().getTime(), // **เพิ่มบรรทัดนี้เพื่อส่ง timestamp**
+        type: currentType // Explicitly send 'income' or 'expense'
+      };
 
-      document.getElementById("totalIncome").textContent = `฿${totalIncome}`;
-      document.getElementById("totalExpense").textContent = `฿${Math.abs(totalExpense)}`;
-      document.getElementById("balance").textContent = `฿${totalIncome + totalExpense}`;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ กำลังบันทึก...";
 
-      renderChart(totalIncome, totalExpense);
-    }
+      try {
+        const response = await fetch(scriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(payload).toString()
+        });
 
-    function editRecord(index) {
-      fetch(scriptUrl + '?t=' + new Date().getTime())
-        .then(res => res.json())
-        .then(data => {
-          const row = data[index];
-          document.getElementById("description").value = row.description.replace(/\[.*?\]\s?/, "");
-          document.getElementById("amount").value = Math.abs(row.amount);
-          document.getElementById("date").value = toThaiDate(row.date);
-          editIndex = index;
-          currentType = row.amount >= 0 ? "income" : "expense";
-          if (currentType === "income") {
-            incomeBtn.classList.add("active-btn");
-            expenseBtn.classList.remove("active-btn");
-          } else {
-            expenseBtn.classList.add("active-btn");
-            incomeBtn.classList.remove("active-btn");
-          }
-        });
-    }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    document.addEventListener("DOMContentLoaded", fetchData);
-  </script>
+        Toastify({
+          text: "✅ บันทึกข้อมูลสำเร็จ!",
+          duration: 2000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #6D9773, #A5DD9B)", /* Cookie Run Green */
+          stopOnFocus: true,
+        }).showToast();
+        setTimeout(() => {
+            location.reload(); 
+        }, 2000); 
+      } catch (error) {
+        console.error("Error submitting data:", error);
+        Toastify({
+          text: "❌ บันทึกข้อมูลไม่สำเร็จ! โปรดตรวจสอบการเชื่อมต่อและ URL ของ Apps Script",
+          duration: 5000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #FF4B2B, #FF416C)",
+          stopOnFocus: true, 
+        }).showToast();
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "🍪 บันทึกรายการ";
+      }
+    }
+
+
+    window.deleteRecordByValue = async function(description, amount, date, timestamp) {
+      Toastify({
+        text: "🗑️ กำลังลบรายการ...",
+        duration: 1500,
+        close: false,
+        gravity: "top",
+        position: "center",
+        backgroundColor: "linear-gradient(to right, #FF7F50, #FF6347)",
+        stopOnFocus: true,
+      }).showToast();
+
+      const payload = {
+        action: 'deleteByValue', 
+        description: description,
+        amount: amount,
+        date: date,
+        timestamp: timestamp 
+      };
+      
+      try {
+        // เปลี่ยนจาก GET เป็น POST
+        const response = await fetch(scriptUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(payload).toString()
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        Toastify({
+          text: "🗑️ ลบข้อมูลเรียบร้อย!",
+          duration: 2000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #E91E63, #C2185B)", /* Cookie Run Red */
+          stopOnFocus: true,
+        }).showToast();
+        setTimeout(() => {
+            location.reload(); 
+        }, 2000); 
+      } catch (error) {
+        console.error("Error deleting data:", error);
+        Toastify({
+          text: "❌ ลบข้อมูลไม่สำเร็จ! โปรดตรวจสอบการเชื่อมต่อและ URL ของ Apps Script",
+          duration: 5000,
+          close: true,
+          gravity: "top", 
+          position: "center", 
+          backgroundColor: "linear-gradient(to right, #FF4B2B, #FF416C)",
+          stopOnFocus: true, 
+        }).showToast();
+      }
+    }
+
+
+    function renderChart(totalIncome, totalExpense) {
+      const ctx = document.getElementById("incomeExpenseChart").getContext("2d");
+      if (incomeExpenseChart) {
+        incomeExpenseChart.destroy(); 
+      }
+      incomeExpenseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['รายรับ', 'รายจ่าย'],
+          datasets: [{
+            label: 'ยอดรวม (บาท)',
+            data: [totalIncome, Math.abs(totalExpense)],
+            backgroundColor: ['#8B4513', '#E91E63'], /* Cookie Run Brown for Income, Pink for Expense */
+            borderRadius: 15, /* More rounded for jelly effect */
+            borderSkipped: false, /* Ensure all corners are rounded */
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ฿' + context.raw.toLocaleString();
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: '#EADBC8' /* Lighter grid lines */
+              },
+              ticks: {
+                callback: function(value) {
+                  return '฿' + value.toLocaleString(); 
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          },
+          animation: {
+            duration: 1000, /* Slower animation for jelly effect */
+            easing: 'easeOutElastic', /* Bouncy easing function */
+            onComplete: function() {
+              // Optional: Add a subtle bounce after animation completes
+              // This might require a custom plugin or more advanced Chart.js features
+            }
+          }
+        }
+      });
+    }
+
+    function resetForm() {
+      document.getElementById("description").value = "";
+      document.getElementById("amount").value = "";
+      document.getElementById("date").value = "";
+      document.getElementById("category").value = "อาหาร"; 
+      submitBtn.textContent = "🍪 บันทึกรายการ";
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchData);
+  </script>
 </body>
 </html>
-
-
